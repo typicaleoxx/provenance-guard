@@ -8,9 +8,9 @@ def combine_scores(semantic_score, stylometric_score, repetition_score):
 
 
 def get_attribution(combined_score):
-    if combined_score >= 0.70:
+    if combined_score >= 0.60:
         return "likely_ai"
-    if combined_score <= 0.30:
+    if combined_score <= 0.35:
         return "likely_human"
     return "uncertain"
 
