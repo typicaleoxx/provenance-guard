@@ -9,6 +9,25 @@ load_dotenv()
 
 MODEL = "llama-3.3-70b-versatile"
 
+TRANSITIONS = [
+    "furthermore",
+    "moreover",
+    "however",
+    "therefore",
+    "consequently",
+    "in addition",
+    "additionally",
+    "in conclusion",
+    "in summary",
+    "for example",
+    "as a result",
+    "overall",
+    "thus",
+    "hence",
+    "notably",
+    "importantly",
+]
+
 
 def get_semantic_score(text):
     api_key = os.environ.get("GROQ_API_KEY")
@@ -57,17 +76,29 @@ def get_stylometric_score(text):
 
     lengths = [len(s.split()) for s in sentences]
     average = sum(lengths) / len(lengths)
-    variance = sum((length - average) ** 2 for length in lengths) / len(lengths)
-    uniformity = 1 / (1 + variance)
+    if average == 0:
+        length_consistency = 0.5
+    else:
+        variance = sum((length - average) ** 2 for length in lengths) / len(lengths)
+        std = variance ** 0.5
+        length_consistency = max(0.0, 1 - std / average)
 
     unique_words = set(word.lower() for word in words)
-    type_token_ratio = len(unique_words) / len(words)
-    low_diversity = 1 - type_token_ratio
+    vocabulary_diversity = len(unique_words) / len(words)
 
-    with_comma = sum(1 for s in sentences if "," in s)
-    comma_consistency = with_comma / len(sentences)
+    lowered = text.lower()
+    transition_hits = sum(1 for phrase in TRANSITIONS if phrase in lowered)
+    transition_usage = min(transition_hits / 3.0, 1.0)
 
-    score = uniformity * 0.4 + low_diversity * 0.4 + comma_consistency * 0.2
+    punctuation = text.count(",") + text.count(";")
+    punctuation_density = min(punctuation / len(sentences), 1.0)
+
+    score = (
+        length_consistency * 0.30
+        + transition_usage * 0.35
+        + punctuation_density * 0.20
+        + vocabulary_diversity * 0.15
+    )
     return round(min(max(score, 0.0), 1.0), 2)
 
 
@@ -89,5 +120,6 @@ def get_repetition_score(text):
     pairs = [words[i] + " " + words[i + 1] for i in range(len(words) - 1)]
     repeated_pairs = 1 - len(set(pairs)) / len(pairs)
 
-    score = repeated_words * 0.4 + repeated_starts * 0.3 + repeated_pairs * 0.3
+    evidence = repeated_words * 0.4 + repeated_starts * 0.3 + repeated_pairs * 0.3
+    score = 0.20 + evidence
     return round(min(max(score, 0.0), 1.0), 2)
