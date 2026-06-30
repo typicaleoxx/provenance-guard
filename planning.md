@@ -112,7 +112,6 @@ Response fields:
 Purpose: let a creator contest a previous decision.
 Request body:
 - content_id: the id of the decision being appealed
-- creator_id: the id of the creator
 - creator_reasoning: why the creator believes the label is wrong
 Response fields:
 - content_id: echoed content id
@@ -130,16 +129,16 @@ Purpose: summarize detection patterns and appeal activity.
 Request body: none.
 Response fields:
 - total_classifications
-- likely_ai_count
-- likely_human_count
-- uncertain_count
-- appeal_count
+- likely_ai
+- likely_human
+- uncertain
+- appeals
 - appeal_rate
 - average_confidence
 
 ## Detection Signals
 
-### 1. Semantic attribution signal using Groq
+### 1. Semantic attribution signal
 What it measures: it asks a hosted language model to judge how likely the text reads as machine generated based on meaning, phrasing, and coherence patterns.
 Why it helps: it captures high level qualities that simple counting cannot, such as overly smooth transitions or generic content.
 Output format: a score from 0.0 to 1.0 where higher means more likely AI.
@@ -231,7 +230,7 @@ When a creator generates a draft and then rewrites large parts of it, the text m
 The full system combines all three signals using the documented weights of 0.50 for semantic, 0.30 for stylometric, and 0.20 for repetition. Using several independent signals reduces the chance that one weak signal decides the outcome, and the weighting reflects how much each signal can be trusted.
 
 ### Analytics dashboard
-A GET /analytics endpoint reads the audit log and reports total_classifications, likely_ai_count, likely_human_count, uncertain_count, appeal_count, appeal_rate, and average_confidence. This shows detection patterns over time, how often creators contest decisions, and the average confidence of the system, which together help judge whether the thresholds are set well.
+A GET /analytics endpoint reads the audit log and reports total_classifications, likely_ai, likely_human, uncertain, appeals, appeal_rate, and average_confidence. This shows detection patterns over time, how often creators contest decisions, and the average confidence of the system, which together help judge whether the thresholds are set well.
 
 ### Implementation note
 Ensemble detection will be implemented with three weighted signals:

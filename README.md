@@ -223,9 +223,9 @@ Sample appeal entry:
   "content_id": "content-001",
   "creator_id": "creator-123",
   "timestamp": "2026-06-30T12:10:00+00:00",
-  "attribution": "likely_ai",
-  "confidence": 0.61,
-  "combined_score": 0.61,
+  "original_attribution": "likely_ai",
+  "original_confidence": 0.61,
+  "original_combined_score": 0.61,
   "semantic_score": 0.8,
   "stylometric_score": 0.56,
   "repetition_score": 0.22,
@@ -273,9 +273,9 @@ One way implementation diverged from the spec was the scoring threshold. The fir
 
 ## AI Usage
 
-1. I used AI assistance to help create the first version of the Flask backend structure from my planning document. I asked for routes like `GET /health`, `POST /submit`, and `GET /log`. I tested the generated route behavior with curl and checked that the response fields matched my API plan.
+1. I used AI assistance to help create the first version of the Flask backend structure from my planning document. I asked for routes like `GET /health`, `POST /submit`, and `GET /log`. The output was a starting route structure. I tested the route behavior with curl and revised the response fields and validation to match my API plan.
 
-2. I used AI assistance to help draft the scoring functions for the semantic, stylometric, and repetition signals. After testing, I noticed that too many examples were landing in the uncertain range, so I adjusted the attribution thresholds to better match the actual score outputs.
+2. I used AI assistance to help draft the scoring functions for the semantic, stylometric, and repetition signals. The output was a first version of the scoring helpers. After testing, I noticed that too many examples were landing in the uncertain range, so I adjusted the attribution thresholds to better match the actual score outputs.
 
 ## How to Run
 
