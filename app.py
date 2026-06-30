@@ -37,8 +37,6 @@ def submit():
         "label": "This content could not be confidently attributed as AI generated or human written. The system found mixed signals, so this result should be treated as uncertain.",
         "signals": {
             "semantic_score": 0.50,
-            "stylometric_score": 0.50,
-            "repetition_score": 0.50,
         },
         "status": "classified",
     }
@@ -52,8 +50,6 @@ def submit():
         "confidence": 0.50,
         "combined_score": 0.50,
         "semantic_score": 0.50,
-        "stylometric_score": 0.50,
-        "repetition_score": 0.50,
         "status": "classified",
     }
     write_log_entry(entry)
