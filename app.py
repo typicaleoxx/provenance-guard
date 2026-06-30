@@ -4,8 +4,15 @@ from datetime import datetime, timezone
 from flask import Flask, jsonify, request
 
 from audit_log import ensure_log_file, get_recent_entries, write_log_entry
+from detector import get_semantic_score
 
 app = Flask(__name__)
+
+LABELS = {
+    "likely_ai": "This content shows strong signs of being AI generated. The system found consistent patterns across multiple detection signals. A creator may appeal this label if they believe it is incorrect.",
+    "likely_human": "This content shows strong signs of being human written. The system found natural variation across multiple detection signals, but this label is not a guarantee of authorship.",
+    "uncertain": "This content could not be confidently attributed as AI generated or human written. The system found mixed signals, so this result should be treated as uncertain.",
+}
 
 
 @app.route("/health", methods=["GET"])
@@ -28,15 +35,28 @@ def submit():
     content_id = str(uuid.uuid4())
     timestamp = datetime.now(timezone.utc).isoformat()
 
+    semantic_score = get_semantic_score(text)
+    combined_score = semantic_score
+
+    if semantic_score >= 0.70:
+        attribution = "likely_ai"
+        confidence = semantic_score
+    elif semantic_score <= 0.30:
+        attribution = "likely_human"
+        confidence = 1 - semantic_score
+    else:
+        attribution = "uncertain"
+        confidence = 0.50
+
     response = {
         "content_id": content_id,
         "creator_id": creator_id,
-        "attribution": "uncertain",
-        "confidence": 0.50,
-        "combined_score": 0.50,
-        "label": "This content could not be confidently attributed as AI generated or human written. The system found mixed signals, so this result should be treated as uncertain.",
+        "attribution": attribution,
+        "confidence": confidence,
+        "combined_score": combined_score,
+        "label": LABELS[attribution],
         "signals": {
-            "semantic_score": 0.50,
+            "semantic_score": semantic_score,
         },
         "status": "classified",
     }
@@ -46,10 +66,10 @@ def submit():
         "content_id": content_id,
         "creator_id": creator_id,
         "timestamp": timestamp,
-        "attribution": "uncertain",
-        "confidence": 0.50,
-        "combined_score": 0.50,
-        "semantic_score": 0.50,
+        "attribution": attribution,
+        "confidence": confidence,
+        "combined_score": combined_score,
+        "semantic_score": semantic_score,
         "status": "classified",
     }
     write_log_entry(entry)
