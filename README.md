@@ -259,6 +259,8 @@ This shows detection patterns, how often creators appeal, and the average confid
 1. Ensemble detection with three weighted signals
 2. Analytics dashboard
 
+When signals disagree, the weighted ensemble resolves the conflict by giving the semantic signal the most influence, the stylometric signal the second most influence, and the repetition signal the least influence.
+
 ## Known Limitations
 
 - Formal human writing can be labeled too strongly because it may look polished and consistent.
