@@ -4,7 +4,12 @@ from datetime import datetime, timezone
 from flask import Flask, jsonify, request
 
 from audit_log import ensure_log_file, get_recent_entries, write_log_entry
-from detector import get_semantic_score
+from detector import (
+    get_repetition_score,
+    get_semantic_score,
+    get_stylometric_score,
+)
+from scoring import combine_scores, get_attribution, get_confidence
 
 app = Flask(__name__)
 
@@ -36,17 +41,14 @@ def submit():
     timestamp = datetime.now(timezone.utc).isoformat()
 
     semantic_score = get_semantic_score(text)
-    combined_score = semantic_score
+    stylometric_score = get_stylometric_score(text)
+    repetition_score = get_repetition_score(text)
 
-    if semantic_score >= 0.70:
-        attribution = "likely_ai"
-        confidence = semantic_score
-    elif semantic_score <= 0.30:
-        attribution = "likely_human"
-        confidence = 1 - semantic_score
-    else:
-        attribution = "uncertain"
-        confidence = 0.50
+    combined_score = combine_scores(
+        semantic_score, stylometric_score, repetition_score
+    )
+    attribution = get_attribution(combined_score)
+    confidence = get_confidence(combined_score, attribution)
 
     response = {
         "content_id": content_id,
@@ -57,6 +59,8 @@ def submit():
         "label": LABELS[attribution],
         "signals": {
             "semantic_score": semantic_score,
+            "stylometric_score": stylometric_score,
+            "repetition_score": repetition_score,
         },
         "status": "classified",
     }
@@ -70,6 +74,8 @@ def submit():
         "confidence": confidence,
         "combined_score": combined_score,
         "semantic_score": semantic_score,
+        "stylometric_score": stylometric_score,
+        "repetition_score": repetition_score,
         "status": "classified",
     }
     write_log_entry(entry)
