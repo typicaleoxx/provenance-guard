@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime, timezone
 
 from flask import Flask, jsonify, request
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from audit_log import (
     ensure_log_file,
@@ -20,6 +22,13 @@ from scoring import combine_scores, get_attribution, get_confidence
 
 app = Flask(__name__)
 
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://",
+)
+
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -27,6 +36,7 @@ def health():
 
 
 @app.route("/submit", methods=["POST"])
+@limiter.limit("10 per minute;100 per day")
 def submit():
     data = request.get_json(silent=True) or {}
     text = data.get("text")
