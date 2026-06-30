@@ -166,11 +166,13 @@ repetition_score * 0.20
 The semantic signal gets the largest weight at 0.50 because it considers meaning and overall coherence, which are the hardest qualities to fake and the most informative. The stylometric signal gets 0.30 because style variation is a useful but noisier indicator that can be skewed by genre. The repetition signal gets the smallest weight at 0.20 because repetition is the easiest pattern to trigger by accident, so it should nudge the result rather than drive it.
 
 ## Uncertainty Representation
-- 0.70 to 1.00 means likely_ai
-- 0.31 to 0.69 means uncertain
-- 0.00 to 0.30 means likely_human
+- 0.60 to 1.00 means likely_ai
+- 0.36 to 0.59 means uncertain
+- 0.00 to 0.35 means likely_human
 
 The uncertain range is intentionally wide because a false positive against a human creator is more harmful than leaving a result undecided. Wrongly labeling a real writer as AI can damage trust and reputation, so the system only commits to a strong label when the combined score is clearly high or clearly low. Anything in the middle is reported as uncertain.
+
+The original threshold plan was adjusted after testing. The scores varied meaningfully, but the old thresholds placed both generated style and casual human examples into uncertain. The revised thresholds still keep an uncertainty band while making the labels more useful.
 
 ## Transparency Label Design
 
