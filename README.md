@@ -1,2 +1,7 @@
-# provenance-guard
-a backend system that any creative sharing platform could plug into to classify submitted content, score confidence in that classification, surface a transparency label to users, and handle appeals from creators who believe they've been misclassified.
+# Provenance Guard
+
+Provenance Guard is a backend system for text attribution analysis on creative writing platforms.
+
+The system will accept submitted writing, run multiple attribution signals, return a confidence score, show a transparency label, support creator appeals, apply rate limiting, and store structured audit logs.
+
+This repo is currently in the planning phase.
