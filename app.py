@@ -5,10 +5,12 @@ from flask import Flask, jsonify, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+from analytics import build_analytics
 from audit_log import (
     ensure_log_file,
     find_classification_by_content_id,
     get_recent_entries,
+    read_log,
     update_classification_status,
     write_log_entry,
 )
@@ -139,6 +141,11 @@ def appeal():
 @app.route("/log", methods=["GET"])
 def log():
     return jsonify({"entries": get_recent_entries()})
+
+
+@app.route("/analytics", methods=["GET"])
+def analytics():
+    return jsonify(build_analytics(read_log()))
 
 
 if __name__ == "__main__":
