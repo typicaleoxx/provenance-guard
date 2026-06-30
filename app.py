@@ -3,21 +3,22 @@ from datetime import datetime, timezone
 
 from flask import Flask, jsonify, request
 
-from audit_log import ensure_log_file, get_recent_entries, write_log_entry
+from audit_log import (
+    ensure_log_file,
+    find_classification_by_content_id,
+    get_recent_entries,
+    update_classification_status,
+    write_log_entry,
+)
 from detector import (
     get_repetition_score,
     get_semantic_score,
     get_stylometric_score,
 )
+from labels import get_transparency_label
 from scoring import combine_scores, get_attribution, get_confidence
 
 app = Flask(__name__)
-
-LABELS = {
-    "likely_ai": "This content shows strong signs of being AI generated. The system found consistent patterns across multiple detection signals. A creator may appeal this label if they believe it is incorrect.",
-    "likely_human": "This content shows strong signs of being human written. The system found natural variation across multiple detection signals, but this label is not a guarantee of authorship.",
-    "uncertain": "This content could not be confidently attributed as AI generated or human written. The system found mixed signals, so this result should be treated as uncertain.",
-}
 
 
 @app.route("/health", methods=["GET"])
@@ -49,6 +50,7 @@ def submit():
     )
     attribution = get_attribution(combined_score)
     confidence = get_confidence(combined_score, attribution)
+    label = get_transparency_label(attribution)
 
     response = {
         "content_id": content_id,
@@ -56,7 +58,7 @@ def submit():
         "attribution": attribution,
         "confidence": confidence,
         "combined_score": combined_score,
-        "label": LABELS[attribution],
+        "label": label,
         "signals": {
             "semantic_score": semantic_score,
             "stylometric_score": stylometric_score,
@@ -81,6 +83,47 @@ def submit():
     write_log_entry(entry)
 
     return jsonify(response)
+
+
+@app.route("/appeal", methods=["POST"])
+def appeal():
+    data = request.get_json(silent=True) or {}
+    content_id = data.get("content_id")
+    creator_reasoning = data.get("creator_reasoning")
+
+    if not content_id:
+        return jsonify({"error": "content_id is required"}), 400
+
+    if not creator_reasoning:
+        return jsonify({"error": "creator_reasoning is required"}), 400
+
+    original = find_classification_by_content_id(content_id)
+    if original is None:
+        return jsonify({"error": "content_id not found"}), 404
+
+    update_classification_status(content_id, "under_review")
+
+    entry = {
+        "event_type": "appeal",
+        "content_id": content_id,
+        "creator_id": original.get("creator_id"),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status": "under_review",
+        "appeal_reasoning": creator_reasoning,
+        "original_attribution": original.get("attribution"),
+        "original_confidence": original.get("confidence"),
+        "original_combined_score": original.get("combined_score"),
+        "semantic_score": original.get("semantic_score"),
+        "stylometric_score": original.get("stylometric_score"),
+        "repetition_score": original.get("repetition_score"),
+    }
+    write_log_entry(entry)
+
+    return jsonify({
+        "content_id": content_id,
+        "status": "under_review",
+        "message": "Appeal received and marked for review.",
+    })
 
 
 @app.route("/log", methods=["GET"])
