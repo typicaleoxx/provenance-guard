@@ -231,6 +231,14 @@ The full system combines all three signals using the documented weights of 0.50 
 ### Analytics dashboard
 A GET /analytics endpoint reads the audit log and reports total_classifications, likely_ai_count, likely_human_count, uncertain_count, appeal_count, appeal_rate, and average_confidence. This shows detection patterns over time, how often creators contest decisions, and the average confidence of the system, which together help judge whether the thresholds are set well.
 
+### Implementation note
+Ensemble detection will be implemented with three weighted signals:
+1. semantic attribution score with 50 percent weight
+2. stylometric score with 30 percent weight
+3. repetition and uniformity score with 20 percent weight
+
+The analytics dashboard will be implemented after the production layer.
+
 ## AI Tool Plan
 This section is included because the assignment asks for it. It describes how assisted coding will be used across milestones without naming any specific tool.
 
